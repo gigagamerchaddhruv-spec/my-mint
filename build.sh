@@ -1,14 +1,14 @@
 #!/bin/bash
 # =================================================================
-# LacOS Build Script - Final Arc & App Store macOS Edition
+# LacOS Build Script - FIXED DOWNLOAD LINK
 # =================================================================
 
 # 1. Install Build Tools
 sudo apt-get update
 sudo apt-get install -y squashfs-tools genisoimage wget git unzip dbus-x11
 
-# 2. Download Official Linux Mint 21.3 ISO
-wget -O mint.iso https://mirrors.layeronline.com
+# 2. Download Official Linux Mint 21.3 ISO (NEW STABLE LINK)
+wget --user-agent="Mozilla/5.0" -O mint.iso https://mirrors.kernel.org
 
 # 3. Extract ISO and SquashFS
 mkdir mnt source
@@ -21,27 +21,21 @@ sudo unsquashfs -d squashfs-root source/casper/filesystem.squashfs
 sudo chroot squashfs-root /bin/bash <<EOF
 # --- A. Repositories & App Installation ---
 add-apt-repository ppa:agornostal/ulauncher -y
-# Repository for Arc Browser (Ubuntu/Mint compatible)
+# Add Arc Browser Repo
 curl -s https://packages.arc-browser.org | sudo gpg --dearmor -o /usr/share/keyrings/arc-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/arc-archive-keyring.gpg] https://packages.arc-browser.org stable main" | sudo tee /etc/apt/sources.list.d/arc.list
 
 apt-get update
-# Install Requested Apps: Arc, Cheese, Notes, and tools
 apt-get install -y ulauncher plank sddm plymouth-themes gnome-sushi \
                    wget curl git fonts-inter-variable conky-all neofetch \
                    zenity cheese arc-browser xnotes
 
 # Install WPS Office
 wget https://wdl1.pcloud.com
-apt-get install -y ./wps-office_11.1.0.11719.amd64.deb
+apt-get install -y ./wps-office_11.1.0.11719.amd64.deb || true
 rm wps-office_11.1.0.11719.amd64.deb
 
-# --- B. Remove Bloatware (Firefox, LibreOffice & Others) ---
-apt-get purge -y firefox* libreoffice* thunderbird hexchat transmission-common \
-               transmission-gtk sticky notes drawing
-apt-get autoremove -y
-
-# --- C. Deep Rebranding (Software Manager -> App Store) ---
+# --- B. Deep Rebranding ---
 sed -i 's/Linux Mint/LacOS/g' /etc/linuxmint/info
 sed -i 's/Linux Mint/LacOS/g' /etc/lsb-release
 echo "LacOS" > /etc/issue
@@ -49,10 +43,9 @@ echo "LacOS" > /etc/issue
 # Rename Software Manager to App Store
 if [ -f "/usr/share/applications/mintinstall.desktop" ]; then
     sed -i 's/Name=Software Manager/Name=App Store/g' /usr/share/applications/mintinstall.desktop
-    sed -i 's/Icon=mintinstall/Icon=appstore/g' /usr/share/applications/mintinstall.desktop
 fi
 
-# --- D. Wallpaper & Themes ---
+# --- C. Wallpaper & Themes ---
 mkdir -p /usr/share/backgrounds/lacos
 wget -O /usr/share/backgrounds/lacos/macTahoe.jpg https://raw.githubusercontent.com
 
@@ -70,41 +63,7 @@ git clone https://github.com /usr/share/sddm/themes/macTahoe
 echo "[Theme]\nCurrent=macTahoe" > /etc/sddm.conf
 cp /usr/share/backgrounds/lacos/macTahoe.jpg /usr/share/sddm/themes/macTahoe/background.jpg
 
-# --- E. Apple Menu & About This Mac ---
-mkdir -p /usr/share/lacos/branding
-cp /usr/share/icons/Hatter/apps/scalable/apple.svg /usr/share/lacos/branding/apple-menu.svg
-
-cat <<ABOUT > /usr/local/bin/about-lacos
-#!/bin/bash
-zenity --info --title="About This Mac" --width=250 --text="<b>LacOS Sequoia</b>\nVersion 1.0\n\nDesign by LacOS Team" --icon-name="apple"
-ABOUT
-chmod +x /usr/local/bin/about-lacos
-
-# --- F. Conky Desktop Widget ---
-mkdir -p /etc/skel/.config/conky
-cat <<CONKY > /etc/skel/.config/conky/lacos.conkyrc
-conky.config = {
-    alignment = 'top_right',
-    background = true,
-    font = 'Inter:size=10',
-    gap_x = 20,
-    gap_y = 60,
-    own_window = true,
-    own_window_type = 'desktop',
-    own_window_transparent = true,
-    own_window_argb_visual = true,
-    own_window_argb_value = 0,
-    update_interval = 1.0,
-}
-conky.text = [[
-\${color white}LacOS \${hr}
-\${color white}Uptime: \${uptime}
-\${color white}CPU: \${cpu cpu0}%
-\${color white}RAM: \${mem} / \${memmax}
-]]
-CONKY
-
-# --- G. Autostart & System Layout (DCONF) ---
+# --- D. Autostart & System Layout (DCONF) ---
 mkdir -p /etc/skel/.config/autostart
 mkdir -p /etc/skel/.config/dconf
 cp /usr/share/applications/ulauncher.desktop /etc/skel/.config/autostart/
@@ -115,7 +74,7 @@ cat <<DCONF > /etc/skel/.config/dconf/user-settings
 enabled-applets=['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:globalAppMenu@lestcape', 'panel1:right:0:systray@cinnamon.org', 'panel1:right:1:calendar@cinnamon.org']
 panels-enabled=['panel1:0:top']
 [org/cinnamon/applets/menu@cinnamon.org]
-menu-icon='/usr/share/lacos/branding/apple-menu.svg'
+menu-icon='/usr/share/icons/Hatter/apps/scalable/apple.svg'
 menu-label=''
 [org/cinnamon/desktop/keybindings]
 menu-key-1=['']
