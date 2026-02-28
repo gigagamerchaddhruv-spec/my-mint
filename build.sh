@@ -1,20 +1,20 @@
 #!/bin/bash
 # =================================================================
-# LacOS Build Script - MODERN GRUB/XORRISO EDITION
+# LacOS Build Script - RELIABLE EXTRACTION EDITION
 # =================================================================
 
-# 1. Install Build & Remastering Tools
+# 1. Install Build Tools
 sudo apt-get update
-sudo apt-get install -y squashfs-tools xorriso wget git unzip dbus-x11 curl isolinux
+sudo apt-get install -y squashfs-tools xorriso wget git unzip dbus-x11 curl p7zip-full isolinux
 
 # 2. Download Official Linux Mint 21.3 ISO
 wget --user-agent="Mozilla/5.0" -O mint.iso https://mirrors.kernel.org
 
-# 3. Extract ISO and SquashFS
-mkdir mnt source
-sudo mount -o loop mint.iso mnt
-cp -a mnt/* source/
-sudo umount mnt
+# 3. Extract ISO using 7zip (No mounting needed!)
+mkdir source
+7z x mint.iso -osource/
+
+# Extract SquashFS
 sudo unsquashfs -d squashfs-root source/casper/filesystem.squashfs
 
 # 4. CUSTOMIZE: The LacOS Transformation
@@ -98,11 +98,12 @@ DCONF
 apt-get clean
 EOF
 
-# 5. Package the Final ISO with XORRISO (Modern GRUB/EFI Support)
+# 5. Package the Final ISO with XORRISO (Modern Hybrid Boot)
+# Note: Mint 21.3 uses EFI/boot/bootx64.efi for UEFI
 xorriso -as mkisofs \
     -iso-level 3 -full-iso9660-filenames \
     -volid "LacOS-Sequoia" \
-    -eltorito-boot boot/grub/porterefi.bin \
+    -eltorito-boot boot/isolinux/isolinux.bin \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
     -eltorito-alt-boot \
     -e boot/grub/efi.img \
